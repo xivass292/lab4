@@ -5,12 +5,15 @@ import com.example.javalabaip.dto.UserDto;
 import com.example.javalabaip.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.validation.Valid;
 import java.util.List;
 
 @RestController
 @RequestMapping("/api")
+@Validated
 public class UserController {
 
     private final UserService userService;
@@ -23,7 +26,7 @@ public class UserController {
     }
 
     @PostMapping("/users")
-    public ResponseEntity<UserDto> create(@RequestBody UserDto userDto) {
+    public ResponseEntity<UserDto> create(@Valid @RequestBody UserDto userDto) {
         UserDto result = userService.create(userDto);
         return ResponseEntity.ok(result);
     }
@@ -47,7 +50,7 @@ public class UserController {
     }
 
     @PutMapping("/users/{id}")
-    public ResponseEntity<UserDto> update(@PathVariable Long id, @RequestBody UserDto userDto) {
+    public ResponseEntity<UserDto> update(@PathVariable Long id, @Valid @RequestBody UserDto userDto) {
         UserDto result = userService.update(id, userDto);
         return ResponseEntity.ok(result);
     }

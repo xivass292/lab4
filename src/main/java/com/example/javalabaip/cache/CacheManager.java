@@ -43,6 +43,10 @@ public class CacheManager {
         userCache.remove(key);
     }
 
+    public void removeUserList(String key) {
+        userListCache.remove(key);
+    }
+
     public void putLocationList(String key, List<LocationResponseDto> value) {
         locationListCache.put(key, value);
     }
@@ -71,6 +75,10 @@ public class CacheManager {
         locationCache.remove(key);
     }
 
+    public void removeLocationList(String key) {
+        locationListCache.remove(key);
+    }
+
     public void clearUserCache() {
         userListCache.clear();
         userCache.clear();
@@ -84,5 +92,17 @@ public class CacheManager {
     public void clearAllCache() {
         clearUserCache();
         clearLocationCache();
+    }
+
+    public void invalidateUserCache(Long id, String username) {
+        removeUser(id);
+        removeUserList("findByUsername:" + username);
+        removeUserList("findAll");
+    }
+
+    public void invalidateLocationCache(Long id, String username) {
+        removeLocation(id);
+        removeLocationList("findByUsername:" + username);
+        removeLocationList("findAll");
     }
 }

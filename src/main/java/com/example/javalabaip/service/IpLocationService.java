@@ -11,11 +11,12 @@ import com.example.javalabaip.util.IpAddressValidator;
 import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
@@ -30,6 +31,7 @@ public class IpLocationService {
     private final UserRepository userRepository;
     private final CacheManager cacheManager;
 
+    @Autowired
     public IpLocationService(RestTemplate restTemplate, LocationRepository locationRepository, UserRepository userRepository, CacheManager cacheManager) {
         this.restTemplate = restTemplate;
         this.locationRepository = locationRepository;
@@ -81,7 +83,7 @@ public class IpLocationService {
 
     @Transactional
     public LocationResponseDto create(String ipAddress, UserDto userDto) {
-        if (!IpAddressValidator.isValidIpAddress(ipAddress)) {
+        if (!IpAddressValidator.getInstance().isValidIpAddress(ipAddress)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Неверный формат IP-адреса: " + ipAddress);
         }
 
@@ -100,7 +102,7 @@ public class IpLocationService {
             location.setUser(user);
             Location savedLocation = locationRepository.save(location);
             LocationResponseDto result = convertToDto(savedLocation);
-            cacheManager.clearAllCache(); // Clear all caches
+            cacheManager.invalidateLocationCache(savedLocation.getId(), userDto.getUsername());
             return result;
         } catch (HttpClientErrorException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Неверный IP-адрес: " + ipAddress, e);
@@ -122,17 +124,17 @@ public class IpLocationService {
         location.setTimezone(locationDto.getTimezone());
         Location updatedLocation = locationRepository.save(location);
         LocationResponseDto result = convertToDto(updatedLocation);
-        cacheManager.clearAllCache(); // Clear all caches
+        cacheManager.invalidateLocationCache(id, location.getUser().getUsername());
         return result;
     }
 
     @Transactional
     public void delete(Long id) {
-        if (!locationRepository.existsById(id)) {
-            throw new EntityNotFoundException("Location not found with id: " + id);
-        }
+        Location location = locationRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Location not found with id: " + id));
+        String username = location.getUser().getUsername();
         locationRepository.deleteById(id);
-        cacheManager.clearAllCache(); // Clear all caches
+        cacheManager.invalidateLocationCache(id, username);
     }
 
     private LocationResponseDto convertToDto(Location location) {

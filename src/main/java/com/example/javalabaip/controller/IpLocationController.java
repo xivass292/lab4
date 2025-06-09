@@ -3,18 +3,19 @@ package com.example.javalabaip.controller;
 import com.example.javalabaip.cache.CacheManager;
 import com.example.javalabaip.dto.LocationResponseDto;
 import com.example.javalabaip.dto.UserDto;
-import com.example.javalabaip.model.Location;
 import com.example.javalabaip.repository.LocationRepository;
 import com.example.javalabaip.service.IpLocationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.validation.Valid;
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api")
+@Validated
 public class IpLocationController {
 
     private final IpLocationService ipLocationService;
@@ -29,7 +30,7 @@ public class IpLocationController {
     }
 
     @PostMapping("/location")
-    public ResponseEntity<LocationResponseDto> createLocation(@RequestParam("ip") String ipAddress, @RequestBody UserDto userDto) {
+    public ResponseEntity<LocationResponseDto> createLocation(@RequestParam("ip") String ipAddress, @Valid @RequestBody UserDto userDto) {
         LocationResponseDto response = ipLocationService.create(ipAddress, userDto);
         return ResponseEntity.ok(response);
     }
@@ -53,7 +54,7 @@ public class IpLocationController {
     }
 
     @PutMapping("/locations/{id}")
-    public ResponseEntity<LocationResponseDto> update(@PathVariable Long id, @RequestBody LocationResponseDto locationDto) {
+    public ResponseEntity<LocationResponseDto> update(@PathVariable Long id, @Valid @RequestBody LocationResponseDto locationDto) {
         LocationResponseDto updatedLocation = ipLocationService.update(id, locationDto);
         return ResponseEntity.ok(updatedLocation);
     }
